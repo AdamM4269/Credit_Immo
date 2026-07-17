@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulateur Credit Immo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <p class="kicker">Projet immobilier</p>
+      <h1>Simulateur de mensualites</h1>
+      <p class="subtitle">Calcul en direct selon ton tableur: mensualite, taux d'endettement, reste a vivre et cout global du pret.</p>
+    </header>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>Donnees du projet</h2>
+        <div class="fields">
+          <label>
+            <span>Prix du bien (€)</span>
+            <input id="prixBien" type="number" min="0" step="1000" value="340000" />
+          </label>
+          <label>
+            <span>Apport (€)</span>
+            <input id="apport" type="number" min="0" step="1000" value="80000" />
+          </label>
+          <label>
+            <span>Taux annuel (%)</span>
+            <input id="tauxAnnuel" type="number" min="0" step="0.01" value="3.5" />
+          </label>
+          <label>
+            <span>Duree du pret (annees)</span>
+            <input id="dureeAnnees" type="number" min="1" step="1" value="25" />
+          </label>
+        </div>
+      </article>
+
+      <article class="panel">
+        <h2>Capacite financiere</h2>
+        <div class="fields">
+          <label>
+            <span>Salaire mensuel (€)</span>
+            <input id="salaireMensuel" type="number" min="0" step="10" value="4100" />
+          </label>
+          <label>
+            <span>Charges mensuelles (€)</span>
+            <input id="charges" type="number" min="0" step="10" value="250" />
+          </label>
+          <label>
+            <span>Taxe fonciere par an (€)</span>
+            <input id="taxeFonciere" type="number" min="0" step="10" value="500" />
+          </label>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel results">
+      <div class="results-head">
+        <h2>Resultats</h2>
+        <span id="debtBadge" class="badge ok">Endettement OK</span>
+      </div>
+      <div class="result-grid">
+        <div class="result-item"><span>Frais de notaire</span><strong id="fraisNotaire"></strong></div>
+        <div class="result-item"><span>Total du projet</span><strong id="totalProjet"></strong></div>
+        <div class="result-item"><span>Montant du pret</span><strong id="montantPret"></strong></div>
+        <div class="result-item"><span>Taux mensuel</span><strong id="tauxMensuel"></strong></div>
+        <div class="result-item"><span>Mensualites</span><strong id="mensualites"></strong></div>
+        <div class="result-item"><span>Taux d'endettement</span><strong id="tauxEndettement"></strong></div>
+        <div class="result-item"><span>Reste a vivre</span><strong id="resteAVivre"></strong></div>
+        <div class="result-item"><span>Montant total rembourse</span><strong id="montantTotalRembourse"></strong></div>
+        <div class="result-item"><span>Prix total du pret</span><strong id="prixTotalPret"></strong></div>
+        <div class="result-item"><span>Prix du pret par mois</span><strong id="prixPretParMois"></strong></div>
+        <div class="result-item"><span>Investissement par mois</span><strong id="investissementParMois"></strong></div>
+      </div>
+      <p class="note">Seuil de reference du tableur: le taux d'endettement ne doit pas depasser 35%.</p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

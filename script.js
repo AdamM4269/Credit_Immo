@@ -26,6 +26,26 @@ const debtBadge = document.getElementById("debtBadge");
 const dureeInput = document.getElementById("dureeAnnees");
 const tauxTooltipTrigger = document.getElementById("tauxTooltipTrigger");
 const tauxTooltip = document.getElementById("tauxTooltip");
+const chargesInput = document.getElementById("charges");
+const openChargesModalBtn = document.getElementById("openChargesModal");
+const closeChargesModalBtn = document.getElementById("closeChargesModal");
+const addChargeItemBtn = document.getElementById("addChargeItem");
+const chargesModal = document.getElementById("chargesModal");
+const chargesItemsContainer = document.getElementById("chargesItems");
+const chargesModalTotal = document.getElementById("chargesModalTotal");
+
+const FORM_STORAGE_KEY = "creditImmoFormValues";
+const CHARGES_STORAGE_KEY = "creditImmoChargesDetails";
+const DEFAULT_CHARGES_TEMPLATE = [
+  { label: "Electricite", amount: 70 },
+  { label: "Eau", amount: 30 },
+  { label: "Internet / Telephone", amount: 40 },
+  { label: "Assurance habitation", amount: 25 },
+  { label: "Charges de copropriete", amount: 60 },
+  { label: "Abonnements divers", amount: 25 }
+];
+
+let chargesDetails = [];
 
 const moneyFmt = new Intl.NumberFormat("fr-FR", {
   style: "currency",
@@ -44,8 +64,192 @@ function getNum(id) {
   return Number.isFinite(value) ? value : 0;
 }
 
+function saveFormState() {
+  const formValues = {};
+  for (const id of inputIds) {
+    formValues[id] = document.getElementById(id).value;
+  }
+  localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formValues));
+}
+
+function loadFormState() {
+  const raw = localStorage.getItem(FORM_STORAGE_KEY);
+  if (!raw) {
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    for (const id of inputIds) {
+      if (Object.hasOwn(parsed, id)) {
+        document.getElementById(id).value = parsed[id];
+      }
+    }
+  } catch {
+    localStorage.removeItem(FORM_STORAGE_KEY);
+  }
+}
+
+function saveChargesDetails() {
+  localStorage.setItem(CHARGES_STORAGE_KEY, JSON.stringify(chargesDetails));
+}
+
+function loadChargesDetails() {
+  const raw = localStorage.getItem(CHARGES_STORAGE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    const sanitized = parsed
+      .map((item) => {
+        const label = typeof item?.label === "string" ? item.label : "Charge";
+        const amount = Number.parseFloat(item?.amount);
+        return {
+          label,
+          amount: Number.isFinite(amount) && amount >= 0 ? amount : 0
+        };
+      })
+      .filter((item) => item.label.length > 0 || item.amount > 0);
+
+    return sanitized.length > 0 ? sanitized : null;
+  } catch {
+    localStorage.removeItem(CHARGES_STORAGE_KEY);
+    return null;
+  }
+}
+
+function buildDefaultChargesDetails(totalTarget) {
+  const baseTotal = DEFAULT_CHARGES_TEMPLATE.reduce((sum, item) => sum + item.amount, 0);
+  if (baseTotal <= 0) {
+    return [{ label: "Charge", amount: 0 }];
+  }
+
+  const normalizedTarget = Number.isFinite(totalTarget) && totalTarget > 0 ? totalTarget : baseTotal;
+  const ratio = normalizedTarget / baseTotal;
+  const scaled = DEFAULT_CHARGES_TEMPLATE.map((item) => ({
+    label: item.label,
+    amount: Number((item.amount * ratio).toFixed(2))
+  }));
+
+  const roundedTotal = scaled.reduce((sum, item) => sum + item.amount, 0);
+  const diff = Number((normalizedTarget - roundedTotal).toFixed(2));
+  if (scaled.length > 0 && diff !== 0) {
+    scaled[scaled.length - 1].amount = Number((scaled[scaled.length - 1].amount + diff).toFixed(2));
+  }
+
+  return scaled;
+}
+
+function isLegacyChargesDetails(details) {
+  if (!Array.isArray(details) || details.length !== 1) {
+    return false;
+  }
+
+  const label = String(details[0].label || "").trim().toLowerCase();
+  return label === "charges existantes" || label === "charge";
+}
+
 function setText(element, value) {
   element.textContent = value;
+}
+
+function getChargesDetailsSum() {
+  return chargesDetails.reduce((sum, item) => sum + item.amount, 0);
+}
+
+function updateChargesFromDetails() {
+  const total = getChargesDetailsSum();
+  chargesInput.value = total.toFixed(2);
+  chargesModalTotal.textContent = moneyFmt.format(total);
+  saveChargesDetails();
+  saveFormState();
+  recompute();
+}
+
+function buildChargeItemRow(item, index) {
+  const row = document.createElement("div");
+  row.className = "charge-item";
+
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.value = item.label;
+  nameInput.placeholder = "Nom (eau, electricite, wifi...)";
+  nameInput.addEventListener("input", (event) => {
+    chargesDetails[index].label = event.target.value;
+    saveChargesDetails();
+  });
+
+  const amountInput = document.createElement("input");
+  amountInput.type = "number";
+  amountInput.min = "0";
+  amountInput.step = "0.01";
+  amountInput.value = item.amount;
+  amountInput.placeholder = "Montant";
+  amountInput.addEventListener("input", (event) => {
+    const parsed = Number.parseFloat(event.target.value);
+    chargesDetails[index].amount = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+    updateChargesFromDetails();
+  });
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "icon-btn";
+  removeBtn.textContent = "x";
+  removeBtn.setAttribute("aria-label", "Supprimer cette charge");
+  removeBtn.addEventListener("click", () => {
+    chargesDetails.splice(index, 1);
+    if (chargesDetails.length === 0) {
+      chargesDetails.push({ label: "Charge", amount: 0 });
+    }
+    renderChargesItems();
+    updateChargesFromDetails();
+  });
+
+  row.appendChild(nameInput);
+  row.appendChild(amountInput);
+  row.appendChild(removeBtn);
+  return row;
+}
+
+function renderChargesItems() {
+  chargesItemsContainer.innerHTML = "";
+  chargesDetails.forEach((item, index) => {
+    const row = buildChargeItemRow(item, index);
+    chargesItemsContainer.appendChild(row);
+  });
+}
+
+function openChargesModal() {
+  renderChargesItems();
+  chargesModal.classList.add("visible");
+  chargesModal.setAttribute("aria-hidden", "false");
+}
+
+function closeChargesModal() {
+  chargesModal.classList.remove("visible");
+  chargesModal.setAttribute("aria-hidden", "true");
+  updateChargesFromDetails();
+}
+
+function initializeChargesDetails() {
+  const storedDetails = loadChargesDetails();
+  if (storedDetails) {
+    if (isLegacyChargesDetails(storedDetails)) {
+      chargesDetails = buildDefaultChargesDetails(storedDetails[0].amount);
+    } else {
+      chargesDetails = storedDetails;
+    }
+  } else {
+    const currentCharges = getNum("charges");
+    chargesDetails = buildDefaultChargesDetails(currentCharges);
+  }
+  updateChargesFromDetails();
 }
 
 function calculateMensualite(montantPret, tauxMensuel, dureeAnnees) {
@@ -111,7 +315,8 @@ function recompute() {
   const dureeAnnees = getNum("dureeAnnees");
   const salaireMensuel = getNum("salaireMensuel");
   const charges = getNum("charges");
-  const taxeFonciere = getNum("taxeFonciere");
+  const taxeFonciereAnnuelle = getNum("taxeFonciere");
+  const taxeFonciereMensuelle = taxeFonciereAnnuelle / 12;
 
   const fraisNotaire = 0.08 * prixBien;
   const totalProjet = prixBien + fraisNotaire;
@@ -120,7 +325,7 @@ function recompute() {
   const mensualites = calculateMensualite(montantPret, tauxMensuel, dureeAnnees);
 
   const tauxEndettement = salaireMensuel > 0 ? mensualites / salaireMensuel : 0;
-  const resteAVivre = salaireMensuel - mensualites - charges - taxeFonciere;
+  const resteAVivre = salaireMensuel - mensualites - charges - taxeFonciereMensuelle;
 
   const montantTotalRembourse = mensualites * 12 * dureeAnnees;
 
@@ -153,10 +358,15 @@ function recompute() {
 }
 
 for (const id of inputIds) {
-  document.getElementById(id).addEventListener("input", recompute);
+  document.getElementById(id).addEventListener("input", () => {
+    recompute();
+    saveFormState();
+  });
 }
 
+loadFormState();
 recompute();
+initializeChargesDetails();
 
 function showRatesInfo() {
   updateRatesTooltip();
@@ -174,3 +384,22 @@ tauxTooltip.addEventListener("mouseenter", () => {
 });
 tauxTooltip.addEventListener("mouseleave", hideRatesInfo);
 dureeInput.addEventListener("focus", updateRatesTooltip);
+
+openChargesModalBtn.addEventListener("click", openChargesModal);
+closeChargesModalBtn.addEventListener("click", closeChargesModal);
+addChargeItemBtn.addEventListener("click", () => {
+  chargesDetails.push({ label: "Nouvelle charge", amount: 0 });
+  renderChargesItems();
+});
+
+chargesModal.addEventListener("click", (event) => {
+  if (event.target === chargesModal) {
+    closeChargesModal();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && chargesModal.classList.contains("visible")) {
+    closeChargesModal();
+  }
+});

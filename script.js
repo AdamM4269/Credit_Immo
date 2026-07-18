@@ -3,6 +3,8 @@ const inputIds = [
   "apport",
   "tauxAnnuel",
   "dureeAnnees",
+  "assuranceCredit",
+  "fraisSupplementairesPretTotal",
   "salaireMensuel",
   "charges",
   "taxeFonciere"
@@ -33,9 +35,17 @@ const addChargeItemBtn = document.getElementById("addChargeItem");
 const chargesModal = document.getElementById("chargesModal");
 const chargesItemsContainer = document.getElementById("chargesItems");
 const chargesModalTotal = document.getElementById("chargesModalTotal");
+const fraisSupplementairesPretInput = document.getElementById("fraisSupplementairesPretTotal");
+const openFraisSupplementairesModalBtn = document.getElementById("openFraisSupplementairesModal");
+const closeFraisSupplementairesModalBtn = document.getElementById("closeFraisSupplementairesModal");
+const addFraisSupplementaireItemBtn = document.getElementById("addFraisSupplementaireItem");
+const fraisSupplementairesModal = document.getElementById("fraisSupplementairesModal");
+const fraisSupplementairesItemsContainer = document.getElementById("fraisSupplementairesItems");
+const fraisSupplementairesModalTotal = document.getElementById("fraisSupplementairesModalTotal");
 
 const FORM_STORAGE_KEY = "creditImmoFormValues";
 const CHARGES_STORAGE_KEY = "creditImmoChargesDetails";
+const FRAIS_SUPPLEMENTAIRES_STORAGE_KEY = "creditImmoFraisSupplementairesDetails";
 const DEFAULT_CHARGES_TEMPLATE = [
   { label: "Electricite", amount: 70 },
   { label: "Eau", amount: 30 },
@@ -44,8 +54,13 @@ const DEFAULT_CHARGES_TEMPLATE = [
   { label: "Charges de copropriete", amount: 60 },
   { label: "Abonnements divers", amount: 25 }
 ];
+const DEFAULT_FRAIS_SUPPLEMENTAIRES_TEMPLATE = [
+  { label: "Prix du courtier", amount: 0 },
+  { label: "Caution", amount: 0 }
+];
 
 let chargesDetails = [];
+let fraisSupplementairesDetails = [];
 
 const moneyFmt = new Intl.NumberFormat("fr-FR", {
   style: "currency",
@@ -94,6 +109,10 @@ function saveChargesDetails() {
   localStorage.setItem(CHARGES_STORAGE_KEY, JSON.stringify(chargesDetails));
 }
 
+function saveFraisSupplementairesDetails() {
+  localStorage.setItem(FRAIS_SUPPLEMENTAIRES_STORAGE_KEY, JSON.stringify(fraisSupplementairesDetails));
+}
+
 function loadChargesDetails() {
   const raw = localStorage.getItem(CHARGES_STORAGE_KEY);
   if (!raw) {
@@ -120,6 +139,36 @@ function loadChargesDetails() {
     return sanitized.length > 0 ? sanitized : null;
   } catch {
     localStorage.removeItem(CHARGES_STORAGE_KEY);
+    return null;
+  }
+}
+
+function loadFraisSupplementairesDetails() {
+  const raw = localStorage.getItem(FRAIS_SUPPLEMENTAIRES_STORAGE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    const sanitized = parsed
+      .map((item) => {
+        const label = typeof item?.label === "string" ? item.label : "Frais";
+        const amount = Number.parseFloat(item?.amount);
+        return {
+          label,
+          amount: Number.isFinite(amount) && amount >= 0 ? amount : 0
+        };
+      })
+      .filter((item) => item.label.length > 0 || item.amount > 0);
+
+    return sanitized.length > 0 ? sanitized : null;
+  } catch {
+    localStorage.removeItem(FRAIS_SUPPLEMENTAIRES_STORAGE_KEY);
     return null;
   }
 }
@@ -155,6 +204,13 @@ function isLegacyChargesDetails(details) {
   return label === "charges existantes" || label === "charge";
 }
 
+function buildDefaultFraisSupplementairesDetails() {
+  return DEFAULT_FRAIS_SUPPLEMENTAIRES_TEMPLATE.map((item) => ({
+    label: item.label,
+    amount: item.amount
+  }));
+}
+
 function setText(element, value) {
   element.textContent = value;
 }
@@ -163,11 +219,24 @@ function getChargesDetailsSum() {
   return chargesDetails.reduce((sum, item) => sum + item.amount, 0);
 }
 
+function getFraisSupplementairesDetailsSum() {
+  return fraisSupplementairesDetails.reduce((sum, item) => sum + item.amount, 0);
+}
+
 function updateChargesFromDetails() {
   const total = getChargesDetailsSum();
   chargesInput.value = total.toFixed(2);
   chargesModalTotal.textContent = moneyFmt.format(total);
   saveChargesDetails();
+  saveFormState();
+  recompute();
+}
+
+function updateFraisSupplementairesFromDetails() {
+  const total = getFraisSupplementairesDetailsSum();
+  fraisSupplementairesPretInput.value = total.toFixed(2);
+  fraisSupplementairesModalTotal.textContent = moneyFmt.format(total);
+  saveFraisSupplementairesDetails();
   saveFormState();
   recompute();
 }
@@ -225,6 +294,59 @@ function renderChargesItems() {
   });
 }
 
+function buildFraisSupplementaireItemRow(item, index) {
+  const row = document.createElement("div");
+  row.className = "charge-item";
+
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.value = item.label;
+  nameInput.placeholder = "Nom (courtier, caution...)";
+  nameInput.addEventListener("input", (event) => {
+    fraisSupplementairesDetails[index].label = event.target.value;
+    saveFraisSupplementairesDetails();
+  });
+
+  const amountInput = document.createElement("input");
+  amountInput.type = "number";
+  amountInput.min = "0";
+  amountInput.step = "0.01";
+  amountInput.value = item.amount;
+  amountInput.placeholder = "Montant";
+  amountInput.addEventListener("input", (event) => {
+    const parsed = Number.parseFloat(event.target.value);
+    fraisSupplementairesDetails[index].amount = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+    updateFraisSupplementairesFromDetails();
+  });
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "icon-btn";
+  removeBtn.textContent = "x";
+  removeBtn.setAttribute("aria-label", "Supprimer ce frais");
+  removeBtn.addEventListener("click", () => {
+    fraisSupplementairesDetails.splice(index, 1);
+    if (fraisSupplementairesDetails.length === 0) {
+      fraisSupplementairesDetails.push({ label: "Frais", amount: 0 });
+    }
+    renderFraisSupplementairesItems();
+    updateFraisSupplementairesFromDetails();
+  });
+
+  row.appendChild(nameInput);
+  row.appendChild(amountInput);
+  row.appendChild(removeBtn);
+  return row;
+}
+
+function renderFraisSupplementairesItems() {
+  fraisSupplementairesItemsContainer.innerHTML = "";
+  fraisSupplementairesDetails.forEach((item, index) => {
+    const row = buildFraisSupplementaireItemRow(item, index);
+    fraisSupplementairesItemsContainer.appendChild(row);
+  });
+}
+
 function openChargesModal() {
   renderChargesItems();
   chargesModal.classList.add("visible");
@@ -235,6 +357,18 @@ function closeChargesModal() {
   chargesModal.classList.remove("visible");
   chargesModal.setAttribute("aria-hidden", "true");
   updateChargesFromDetails();
+}
+
+function openFraisSupplementairesModal() {
+  renderFraisSupplementairesItems();
+  fraisSupplementairesModal.classList.add("visible");
+  fraisSupplementairesModal.setAttribute("aria-hidden", "false");
+}
+
+function closeFraisSupplementairesModal() {
+  fraisSupplementairesModal.classList.remove("visible");
+  fraisSupplementairesModal.setAttribute("aria-hidden", "true");
+  updateFraisSupplementairesFromDetails();
 }
 
 function initializeChargesDetails() {
@@ -250,6 +384,16 @@ function initializeChargesDetails() {
     chargesDetails = buildDefaultChargesDetails(currentCharges);
   }
   updateChargesFromDetails();
+}
+
+function initializeFraisSupplementairesDetails() {
+  const storedDetails = loadFraisSupplementairesDetails();
+  if (storedDetails) {
+    fraisSupplementairesDetails = storedDetails;
+  } else {
+    fraisSupplementairesDetails = buildDefaultFraisSupplementairesDetails();
+  }
+  updateFraisSupplementairesFromDetails();
 }
 
 function calculateMensualite(montantPret, tauxMensuel, dureeAnnees) {
@@ -313,16 +457,19 @@ function recompute() {
   const apport = getNum("apport");
   const tauxAnnuel = getNum("tauxAnnuel") / 100;
   const dureeAnnees = getNum("dureeAnnees");
+  const assuranceCredit = getNum("assuranceCredit");
+  const fraisSupplementairesPret = getNum("fraisSupplementairesPretTotal");
   const salaireMensuel = getNum("salaireMensuel");
   const charges = getNum("charges");
   const taxeFonciereAnnuelle = getNum("taxeFonciere");
   const taxeFonciereMensuelle = taxeFonciereAnnuelle / 12;
 
   const fraisNotaire = 0.08 * prixBien;
-  const totalProjet = prixBien + fraisNotaire;
+  const totalProjet = prixBien + fraisNotaire + fraisSupplementairesPret;
   const montantPret = totalProjet - apport;
   const tauxMensuel = Math.pow(1 + tauxAnnuel, 1 / 12) - 1;
-  const mensualites = calculateMensualite(montantPret, tauxMensuel, dureeAnnees);
+  const mensualitePret = calculateMensualite(montantPret, tauxMensuel, dureeAnnees);
+  const mensualites = mensualitePret + assuranceCredit;
 
   const tauxEndettement = salaireMensuel > 0 ? mensualites / salaireMensuel : 0;
   const resteAVivre = salaireMensuel - mensualites - charges - taxeFonciereMensuelle;
@@ -367,6 +514,7 @@ for (const id of inputIds) {
 loadFormState();
 recompute();
 initializeChargesDetails();
+initializeFraisSupplementairesDetails();
 
 function showRatesInfo() {
   updateRatesTooltip();
@@ -392,9 +540,22 @@ addChargeItemBtn.addEventListener("click", () => {
   renderChargesItems();
 });
 
+openFraisSupplementairesModalBtn.addEventListener("click", openFraisSupplementairesModal);
+closeFraisSupplementairesModalBtn.addEventListener("click", closeFraisSupplementairesModal);
+addFraisSupplementaireItemBtn.addEventListener("click", () => {
+  fraisSupplementairesDetails.push({ label: "Nouveau frais", amount: 0 });
+  renderFraisSupplementairesItems();
+});
+
 chargesModal.addEventListener("click", (event) => {
   if (event.target === chargesModal) {
     closeChargesModal();
+  }
+});
+
+fraisSupplementairesModal.addEventListener("click", (event) => {
+  if (event.target === fraisSupplementairesModal) {
+    closeFraisSupplementairesModal();
   }
 });
 

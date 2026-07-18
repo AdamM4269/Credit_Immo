@@ -161,6 +161,16 @@ input[readonly] {
   background: #f4eee3;
 }
 
+.modal-close-btn {
+  border-color: #fca5a5;
+  color: #b91c1c;
+  background: #fff5f5;
+}
+
+.modal-close-btn:hover {
+  background: #fee2e2;
+}
+
 .modal {
   position: fixed;
   inset: 0;
@@ -220,6 +230,17 @@ input[readonly] {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.modal-actions {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-ok-btn {
+  min-width: 92px;
+  font-weight: 700;
 }
 
 .results-head {

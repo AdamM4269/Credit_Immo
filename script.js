@@ -31,6 +31,7 @@ const tauxTooltip = document.getElementById("tauxTooltip");
 const chargesInput = document.getElementById("charges");
 const openChargesModalBtn = document.getElementById("openChargesModal");
 const closeChargesModalBtn = document.getElementById("closeChargesModal");
+const confirmChargesModalBtn = document.getElementById("confirmChargesModal");
 const addChargeItemBtn = document.getElementById("addChargeItem");
 const chargesModal = document.getElementById("chargesModal");
 const chargesItemsContainer = document.getElementById("chargesItems");
@@ -38,6 +39,7 @@ const chargesModalTotal = document.getElementById("chargesModalTotal");
 const fraisSupplementairesPretInput = document.getElementById("fraisSupplementairesPretTotal");
 const openFraisSupplementairesModalBtn = document.getElementById("openFraisSupplementairesModal");
 const closeFraisSupplementairesModalBtn = document.getElementById("closeFraisSupplementairesModal");
+const confirmFraisSupplementairesModalBtn = document.getElementById("confirmFraisSupplementairesModal");
 const addFraisSupplementaireItemBtn = document.getElementById("addFraisSupplementaireItem");
 const fraisSupplementairesModal = document.getElementById("fraisSupplementairesModal");
 const fraisSupplementairesItemsContainer = document.getElementById("fraisSupplementairesItems");
@@ -535,6 +537,7 @@ dureeInput.addEventListener("focus", updateRatesTooltip);
 
 openChargesModalBtn.addEventListener("click", openChargesModal);
 closeChargesModalBtn.addEventListener("click", closeChargesModal);
+confirmChargesModalBtn.addEventListener("click", closeChargesModal);
 addChargeItemBtn.addEventListener("click", () => {
   chargesDetails.push({ label: "Nouvelle charge", amount: 0 });
   renderChargesItems();
@@ -542,6 +545,7 @@ addChargeItemBtn.addEventListener("click", () => {
 
 openFraisSupplementairesModalBtn.addEventListener("click", openFraisSupplementairesModal);
 closeFraisSupplementairesModalBtn.addEventListener("click", closeFraisSupplementairesModal);
+confirmFraisSupplementairesModalBtn.addEventListener("click", closeFraisSupplementairesModal);
 addFraisSupplementaireItemBtn.addEventListener("click", () => {
   fraisSupplementairesDetails.push({ label: "Nouveau frais", amount: 0 });
   renderFraisSupplementairesItems();
@@ -560,7 +564,12 @@ fraisSupplementairesModal.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && chargesModal.classList.contains("visible")) {
-    closeChargesModal();
+  if (event.key === "Escape") {
+    if (chargesModal.classList.contains("visible")) {
+      closeChargesModal();
+    }
+    if (fraisSupplementairesModal.classList.contains("visible")) {
+      closeFraisSupplementairesModal();
+    }
   }
 });

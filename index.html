@@ -114,7 +114,7 @@
     <div class="modal-card" role="document">
       <div class="modal-head">
         <h2 id="chargesModalTitle">Detail des charges mensuelles</h2>
-        <button id="closeChargesModal" type="button" class="icon-btn" aria-label="Fermer la popup">x</button>
+        <button id="closeChargesModal" type="button" class="icon-btn modal-close-btn" aria-label="Fermer la popup">x</button>
       </div>
 
       <div id="chargesItems" class="charges-items"></div>
@@ -125,6 +125,9 @@
         <span>Total mensuel</span>
         <strong id="chargesModalTotal">0 €</strong>
       </div>
+      <div class="modal-actions">
+        <button id="confirmChargesModal" type="button" class="secondary-btn modal-ok-btn">OK</button>
+      </div>
     </div>
   </div>
 
@@ -132,7 +135,7 @@
     <div class="modal-card" role="document">
       <div class="modal-head">
         <h2 id="fraisSupplementairesModalTitle">Detail des frais supplémentaires du prêt</h2>
-        <button id="closeFraisSupplementairesModal" type="button" class="icon-btn" aria-label="Fermer la popup">x</button>
+        <button id="closeFraisSupplementairesModal" type="button" class="icon-btn modal-close-btn" aria-label="Fermer la popup">x</button>
       </div>
 
       <div id="fraisSupplementairesItems" class="charges-items"></div>
@@ -142,6 +145,9 @@
       <div class="modal-footer">
         <span>Total des frais supplémentaires</span>
         <strong id="fraisSupplementairesModalTotal">0 €</strong>
+      </div>
+      <div class="modal-actions">
+        <button id="confirmFraisSupplementairesModal" type="button" class="secondary-btn modal-ok-btn">OK</button>
       </div>
     </div>
   </div>

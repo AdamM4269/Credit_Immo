@@ -50,7 +50,10 @@
           </label>
           <label>
             <span>Charges mensuelles (€)</span>
-            <input id="charges" type="number" min="0" step="10" value="250" />
+            <div class="charges-control">
+              <input id="charges" type="number" min="0" step="10" value="250" readonly />
+              <button id="openChargesModal" type="button" class="secondary-btn">Detail des charges</button>
+            </div>
           </label>
           <label>
             <span>Taxe fonciere par an (€)</span>
@@ -81,6 +84,24 @@
       <p class="note">Seuil de reference du tableur: le taux d'endettement ne doit pas depasser 35%.</p>
     </section>
   </main>
+
+  <div id="chargesModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="chargesModalTitle">
+    <div class="modal-card" role="document">
+      <div class="modal-head">
+        <h2 id="chargesModalTitle">Detail des charges mensuelles</h2>
+        <button id="closeChargesModal" type="button" class="icon-btn" aria-label="Fermer la popup">x</button>
+      </div>
+
+      <div id="chargesItems" class="charges-items"></div>
+
+      <button id="addChargeItem" type="button" class="secondary-btn">Ajouter une charge</button>
+
+      <div class="modal-footer">
+        <span>Total mensuel</span>
+        <strong id="chargesModalTotal">0 €</strong>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

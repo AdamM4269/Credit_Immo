@@ -23,6 +23,9 @@ const outputs = {
 };
 
 const debtBadge = document.getElementById("debtBadge");
+const dureeInput = document.getElementById("dureeAnnees");
+const tauxTooltipTrigger = document.getElementById("tauxTooltipTrigger");
+const tauxTooltip = document.getElementById("tauxTooltip");
 
 const moneyFmt = new Intl.NumberFormat("fr-FR", {
   style: "currency",
@@ -56,6 +59,49 @@ function calculateMensualite(montantPret, tauxMensuel, dureeAnnees) {
 
   const factor = Math.pow(1 + tauxMensuel, n);
   return montantPret * ((tauxMensuel * factor) / (factor - 1));
+}
+
+function interpolateRate(duration, lowA, lowB, highA, highB, minDuration, maxDuration) {
+  if (duration <= minDuration) {
+    return { bas: lowA, haut: highA };
+  }
+  if (duration >= maxDuration) {
+    return { bas: lowB, haut: highB };
+  }
+
+  const ratio = (duration - minDuration) / (maxDuration - minDuration);
+  return {
+    bas: lowA + (lowB - lowA) * ratio,
+    haut: highA + (highB - highA) * ratio
+  };
+}
+
+function getRatesForDuration(duration) {
+  // Source exploitee: Meilleurtaux, juillet 2026.
+  // 15 ans: bon 3.5 / excellent 3.0
+  // 20 ans: bon 3.6 / excellent 3.1
+  // 25 ans: bon 3.7 / excellent 3.2
+  if (duration <= 15) {
+    return interpolateRate(duration, 3.0, 3.0, 3.5, 3.5, 1, 15);
+  }
+  if (duration <= 20) {
+    return interpolateRate(duration, 3.0, 3.1, 3.5, 3.6, 15, 20);
+  }
+  return interpolateRate(duration, 3.1, 3.2, 3.6, 3.7, 20, 25);
+}
+
+function updateRatesTooltip() {
+  const duration = getNum("dureeAnnees");
+  const rates = getRatesForDuration(duration);
+  const supportedDurations = "7, 10, 15, 20 et 25 ans";
+  tauxTooltip.innerHTML = `
+    <div class="tooltip-title">Fourchette de taux pour ${duration || 0} ans</div>
+    <div class="tooltip-rate"><span>Taux bas</span><strong>${rates.bas.toFixed(2).replace(".", ",")}%</strong></div>
+    <div class="tooltip-rate"><span>Taux haut</span><strong>${rates.haut.toFixed(2).replace(".", ",")}%</strong></div>
+    <small>Durees de pret prises en charge par ce tooltip: ${supportedDurations}.</small>
+    <small>Reference: barometre Meilleurtaux, juillet 2026. Les autres durees sont estimees par interpolation.</small>
+    <small><a href="https://www.meilleurtaux.com/credit-immobilier/barometre-des-taux.html" target="_blank" rel="noreferrer">Voir la source</a></small>
+  `;
 }
 
 function recompute() {
@@ -102,6 +148,8 @@ function recompute() {
     debtBadge.className = "badge warn";
     debtBadge.textContent = "Endettement > 35%";
   }
+
+  updateRatesTooltip();
 }
 
 for (const id of inputIds) {
@@ -109,3 +157,20 @@ for (const id of inputIds) {
 }
 
 recompute();
+
+function showRatesInfo() {
+  updateRatesTooltip();
+  tauxTooltip.classList.add("visible");
+}
+
+function hideRatesInfo() {
+  tauxTooltip.classList.remove("visible");
+}
+
+tauxTooltipTrigger.addEventListener("mouseenter", showRatesInfo);
+tauxTooltipTrigger.addEventListener("mouseleave", hideRatesInfo);
+tauxTooltip.addEventListener("mouseenter", () => {
+  tauxTooltip.classList.add("visible");
+});
+tauxTooltip.addEventListener("mouseleave", hideRatesInfo);
+dureeInput.addEventListener("focus", updateRatesTooltip);

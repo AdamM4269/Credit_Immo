@@ -118,8 +118,14 @@ input[readonly] {
 }
 
 .charges-control {
-  display: grid;
+  display: flex;
   gap: 0.5rem;
+  align-items: center;
+}
+
+.charges-control input {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .secondary-btn {
@@ -388,6 +394,11 @@ label {
 
   .charge-item {
     grid-template-columns: 1fr;
+  }
+
+  .charges-control {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .icon-btn {

@@ -38,6 +38,17 @@
             <span>Duree du pret (annees)</span>
             <input id="dureeAnnees" type="number" min="1" step="1" value="25" />
           </label>
+          <label>
+            <span>Assurance du credit mensuelle (€)</span>
+            <input id="assuranceCredit" type="number" min="0" step="1" value="0" />
+          </label>
+          <label>
+            <span>Frais supplémentaires du prêt (€)</span>
+            <div class="charges-control">
+              <input id="fraisSupplementairesPretTotal" type="number" min="0" step="100" value="0" readonly />
+              <button id="openFraisSupplementairesModal" type="button" class="secondary-btn">Detail des frais</button>
+            </div>
+          </label>
         </div>
       </article>
 
@@ -99,6 +110,24 @@
       <div class="modal-footer">
         <span>Total mensuel</span>
         <strong id="chargesModalTotal">0 €</strong>
+      </div>
+    </div>
+  </div>
+
+  <div id="fraisSupplementairesModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="fraisSupplementairesModalTitle">
+    <div class="modal-card" role="document">
+      <div class="modal-head">
+        <h2 id="fraisSupplementairesModalTitle">Detail des frais supplémentaires du prêt</h2>
+        <button id="closeFraisSupplementairesModal" type="button" class="icon-btn" aria-label="Fermer la popup">x</button>
+      </div>
+
+      <div id="fraisSupplementairesItems" class="charges-items"></div>
+
+      <button id="addFraisSupplementaireItem" type="button" class="secondary-btn">Ajouter un frais</button>
+
+      <div class="modal-footer">
+        <span>Total des frais supplémentaires</span>
+        <strong id="fraisSupplementairesModalTotal">0 €</strong>
       </div>
     </div>
   </div>

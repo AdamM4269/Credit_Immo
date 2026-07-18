@@ -79,18 +79,32 @@
         <h2>Resultats</h2>
         <span id="debtBadge" class="badge ok">Endettement OK</span>
       </div>
-      <div class="result-grid">
-        <div class="result-item"><span>Frais de notaire</span><strong id="fraisNotaire"></strong></div>
-        <div class="result-item"><span>Total du projet</span><strong id="totalProjet"></strong></div>
-        <div class="result-item"><span>Montant du pret</span><strong id="montantPret"></strong></div>
-        <div class="result-item"><span>Taux mensuel</span><strong id="tauxMensuel"></strong></div>
-        <div class="result-item"><span>Mensualites</span><strong id="mensualites"></strong></div>
-        <div class="result-item"><span>Taux d'endettement</span><strong id="tauxEndettement"></strong></div>
-        <div class="result-item"><span>Reste a vivre</span><strong id="resteAVivre"></strong></div>
-        <div class="result-item"><span>Montant total rembourse</span><strong id="montantTotalRembourse"></strong></div>
-        <div class="result-item"><span>Prix total du pret</span><strong id="prixTotalPret"></strong></div>
-        <div class="result-item"><span>Prix du pret par mois</span><strong id="prixPretParMois"></strong></div>
-        <div class="result-item"><span>Investissement par mois</span><strong id="investissementParMois"></strong></div>
+      <div class="results-overview">
+        <div class="result-item result-item--featured"><span>Mensualites</span><strong id="mensualites"></strong></div>
+        <div class="result-item result-item--featured"><span>Taux d'endettement</span><strong id="tauxEndettement"></strong></div>
+        <div class="result-item result-item--featured"><span>Reste a vivre</span><strong id="resteAVivre"></strong></div>
+      </div>
+
+      <div class="results-groups">
+        <section class="result-group">
+          <h3>Projet & apport</h3>
+          <div class="result-grid">
+            <div class="result-item"><span>Frais de notaire</span><strong id="fraisNotaire"></strong></div>
+            <div class="result-item"><span>Total du projet</span><strong id="totalProjet"></strong></div>
+            <div class="result-item"><span>Montant du pret</span><strong id="montantPret"></strong></div>
+            <div class="result-item"><span>Taux mensuel</span><strong id="tauxMensuel"></strong></div>
+          </div>
+        </section>
+
+        <section class="result-group">
+          <h3>Cout du pret</h3>
+          <div class="result-grid">
+            <div class="result-item"><span>Montant total rembourse</span><strong id="montantTotalRembourse"></strong></div>
+            <div class="result-item"><span>Prix total du pret</span><strong id="prixTotalPret"></strong></div>
+            <div class="result-item"><span>Prix du pret par mois</span><strong id="prixPretParMois"></strong></div>
+            <div class="result-item"><span>Investissement par mois</span><strong id="investissementParMois"></strong></div>
+          </div>
+        </section>
       </div>
       <p class="note">Seuil de reference du tableur: le taux d'endettement ne doit pas depasser 35%.</p>
     </section>
